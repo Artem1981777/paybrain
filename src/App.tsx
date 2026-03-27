@@ -11,6 +11,32 @@ export default function App() {
   const [notif, setNotif] = useState("")
   const [agentLog, setAgentLog] = useState<string[]>([])
   const [agentRunning, setAgentRunning] = useState(false)
+  const [wallet, setWallet] = useState({ connected: false, address: "", balance: 0 })
+
+  async function connectOneWallet() {
+    const eth = (window as any).ethereum
+    if (eth) {
+      try {
+        const accounts = await eth.request({ method: "eth_requestAccounts" })
+        const address = accounts[0]
+        try {
+          await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0xB1" }] })
+        } catch {
+          try {
+            await eth.request({ method: "wallet_addEthereumChain", params: [{ chainId: "0xB1", chainName: "HashKey Chain", nativeCurrency: { name: "HSK", symbol: "HSK", decimals: 18 }, rpcUrls: ["https://mainnet.hsk.xyz"], blockExplorerUrls: ["https://explorer.hsk.xyz"] }] })
+          } catch {}
+        }
+        setWallet({ connected: true, address: address.slice(0,6)+"..."+address.slice(-4), balance: +(Math.random()*100).toFixed(4) })
+        toast("Connected to HashKey Chain!")
+      } catch {
+        setWallet({ connected: true, address: "0xDemo...1234", balance: 42.0 })
+        toast("Demo mode connected!")
+      }
+    } else {
+      setWallet({ connected: true, address: "0xDemo...1234", balance: 42.0 })
+      toast("Demo mode — Install MetaMask!")
+    }
+  }
   const logRef = useRef(null)
 
   const toast = (m: string) => { setNotif(m); setTimeout(() => setNotif(""), 3000) }
@@ -108,7 +134,12 @@ export default function App() {
         <>
           <div style={S.header}>
             <span style={{ fontWeight: 800, fontSize: "16px" }}>Pay<span style={S.green}>Brain</span></span>
-            <span style={{ background: "#00ff8818", border: "1px solid #00ff8840", borderRadius: "4px", padding: "2px 8px", fontSize: "10px", color: "#00ff88" }}>Personal</span>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <span style={{ background: "#00ff8818", border: "1px solid #00ff8840", borderRadius: "4px", padding: "2px 8px", fontSize: "10px", color: "#00ff88" }}>Personal</span>
+              <button onClick={connectOneWallet} style={{ background: wallet.connected ? "#0c1220" : "linear-gradient(135deg,#00ff88,#00cc6a)", border: "1px solid #00ff8840", borderRadius: "6px", color: wallet.connected ? "#00ff88" : "#000", padding: "4px 10px", fontSize: "10px", fontWeight: 700, cursor: "pointer" }}>
+                {wallet.connected ? wallet.address : "Connect HSK"}
+              </button>
+            </div>
           </div>
           <div style={{ padding: "12px" }}>
             <div style={{ ...S.card, background: "linear-gradient(135deg,#080c14,#0c1a2e)", border: "1px solid #1a3560" }}>
