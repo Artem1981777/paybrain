@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 // imports removed
 
 const API = "https://api.anthropic.com/v1/messages"
@@ -12,6 +12,25 @@ export default function App() {
   const [agentLog, setAgentLog] = useState<string[]>([])
   const [agentRunning, setAgentRunning] = useState(false)
   const [wallet, setWallet] = useState({ connected: false, address: "", balance: 0 })
+  const [hskPrice, setHskPrice] = useState(0)
+  const [hskChange, setHskChange] = useState(0)
+
+  useEffect(() => {
+    async function fetchHSK() {
+      try {
+        const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=hashkey-platform-token&vs_currencies=usd&include_24hr_change=true")
+        const data = await res.json()
+        setHskPrice(data["hashkey-platform-token"]?.usd || 0.157)
+        setHskChange(data["hashkey-platform-token"]?.usd_24h_change || -0.4)
+      } catch {
+        setHskPrice(0.157)
+        setHskChange(-0.4)
+      }
+    }
+    fetchHSK()
+    const interval = setInterval(fetchHSK, 30000)
+    return () => clearInterval(interval)
+  }, [])
 
   async function connectOneWallet() {
     const eth = (window as any).ethereum
@@ -138,6 +157,11 @@ export default function App() {
               <span style={{ background: "#00ff8818", border: "1px solid #00ff8840", borderRadius: "4px", padding: "2px 8px", fontSize: "10px", color: "#00ff88" }}>Personal</span>
               <button onClick={connectOneWallet} style={{ background: wallet.connected ? "#0c1220" : "linear-gradient(135deg,#00ff88,#00cc6a)", border: "1px solid #00ff8840", borderRadius: "6px", color: wallet.connected ? "#00ff88" : "#000", padding: "4px 10px", fontSize: "10px", fontWeight: 700, cursor: "pointer" }}>
                 {wallet.connected ? wallet.address : "Connect HSK"}
+              {hskPrice > 0 && (
+                <span style={{fontSize:"10px", marginLeft:"6px", color: hskChange >= 0 ? "#00ff88" : "#ff3366", fontFamily:"monospace"}}>
+                  HSK ${hskPrice.toFixed(4)} {hskChange >= 0 ? "▲" : "▼"}{Math.abs(hskChange).toFixed(2)}%
+                </span>
+              )}
               </button>
             </div>
           </div>
