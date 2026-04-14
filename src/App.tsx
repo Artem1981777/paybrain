@@ -12,8 +12,8 @@ export default function App() {
   const [agentLog, setAgentLog] = useState<string[]>([])
   const [agentRunning, setAgentRunning] = useState(false)
   const [wallet, setWallet] = useState({ connected: false, address: "", balance: 0 })
-  const [hskPrice, setHskPrice] = useState(0)
-  const [hskChange, setHskChange] = useState(0)
+  const [hskPrice, setHskPrice] = useState(0.157)
+  const [hskChange, setHskChange] = useState(-0.4)
 
   useEffect(() => {
     async function fetchHSK() {
